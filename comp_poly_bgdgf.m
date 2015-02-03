@@ -1,10 +1,30 @@
 function P = comp_poly_bgdgf(pacco,stiff,varargin)
-% Computes a piecewise polynomial approximation of the digitalized function; the
-% piecewise polynomy is continous and derivable one time.
+
+% COMP_POLY_BGDGF This function computes a piecewise polynomial approx
+%                 based on the discrete points (pacco,stiff). The result is
+%                 continuous and differentiable in time
+%
+% INPUTS          pacco:   X values (stroke in case of coupling gear)
+%                 stiff:   Y values (force  in case of coupling gear)
+%                 varagin: Variable number of input arguments
+%                          if nargin == 4, 4th argument is the order of
+%                          polynomial, can only be 1 or 3, default is 3
+%                          3rd argument set to 's' for pol of 3rd order
+%                          means.... (+)
+%                          3rd argument set to 'c' for pol of 1st order
+%                          means.... (+)
+%
+% OUTPUT          P:       Polynomial coefficients. The first element is 
+%                          always the number of polynomials. If the order
+%                          is set to 3 for example, P(2:5) contains the
+%                          first polynomial, P(6:9) the second etc. 
+%                          (polyval can be used to confirm data)
+
 % Number of useful points
 npoints = nnz(stiff(2:end)) + 1;
-vnpoi = 1:npoints; % In order to short the lines
-mol = 21;
+vnpoi   = 1:npoints; % In order to short the lines
+mol     = 21;
+
 if npoints >= 3
     P = zeros(1,4*(npoints-1)+1);
     if nargin > 2
@@ -13,10 +33,10 @@ if npoints >= 3
             T1 = (stiff(2)-stiff(1))/pacco(2);
         else
             T1 = 0;
-        end;
+        end
     else
         T1 = 0;
-    end;
+    end
     if nargin == 4, ord = varargin{2}; else ord = 3; end;
     if ord == 3
         for jj = 1:npoints-1
@@ -27,31 +47,31 @@ if npoints >= 3
                 T2 = (stiff(jj+2)-stiff(jj+1))/(pacco(jj+2)-pacco(jj+1));
             else
                 T2 = 0.5*((stiff(jj+1)-stiff(jj))/(pacco(jj+1)-pacco(jj)) + (stiff(jj+2)-stiff(jj+1))/(pacco(jj+2)-pacco(jj+1)));
-            end;
+            end
             %if abs(T2) > mol*abs(T1) && T1 > 0%&& jj > 1
             if abs(T2) > mol*abs(T1) && T1 > 0 && jj < npoints-1
                 T2 = mol*T1*sign(T2);
-            end;
-            P = interp3(jj,P,pacco,stiff,T1,T2);
+            end
+            P  = interp3(jj,P,pacco,stiff,T1,T2);
             T1 = T2;
-        end;
+        end
     elseif ord == 1
         if strcmp(varargin{1},'c')
             jj = 1;
             T2 = (stiff(jj+2)-stiff(jj+1))/(pacco(jj+2)-pacco(jj+1));
-            P = interp3(jj,P,pacco,stiff,T1,T2);
+            P  = interp3(jj,P,pacco,stiff,T1,T2);
         else
             P = interp1(1,P,pacco,stiff);
-        end;
+        end
         for jj = 2:npoints-1
-            P = interp1(jj,P,pacco,stiff);
-        end;
-    end;
+            P  = interp1(jj,P,pacco,stiff);
+        end
+    end
     P(1) = npoints-1;
 else
-    P(1) = 1;
+    P(1)   = 1;
     P(2:3) = polyfit(pacco(vnpoi),stiff(vnpoi),1);
-end;
+end
 
 function P = interp3(jj,P,pacco,stiff,T1,T2)
 
